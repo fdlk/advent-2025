@@ -20,7 +20,7 @@ def isInvalidPart2(id: Long): Boolean =
   val string = id.toString
   (1 to string.length / 2).exists(size => {
     string.length % size == 0 &&
-    string.substring(0, size).repeat(string.length / size).mkString == string
+    string.substring(0, size).repeat(string.length / size) == string
   })
 
 val part2 = input.flatMap({
