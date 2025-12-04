@@ -10,13 +10,13 @@ case class Point(x: Int, y: Int) {
         dy <- -1 to 1
         result = Point(x + dx, y + dy)
         if result != this
-    }  yield result
+    } yield result
 }
 
 val rolls: Set[Point] = (for {
     y <- input.indices
     x <- input.head.indices
-    if input(x)(y) == '@'
+    if input(y)(x) == '@'
 }
 yield Point(x, y)).toSet
 
@@ -29,5 +29,5 @@ def clearRolls(rolls: Set[Point]): Set[Point] =
         rolls
     else
         clearRolls(rolls -- clearable)
-        
+
 val  part2 = rolls.size - clearRolls(rolls).size
