@@ -21,3 +21,13 @@ val rolls: Set[Point] = (for {
 yield Point(x, y)).toSet
 
 val part1 = rolls.count(_.neighbors.count(rolls) < 4)
+
+@tailrec
+def clearRolls(rolls: Set[Point]): Set[Point] =
+    val clearable = rolls.filter(_.neighbors.count(rolls) < 4)
+    if (clearable.isEmpty)
+        rolls
+    else
+        clearRolls(rolls -- clearable)
+        
+val  part2 = rolls.size - clearRolls(rolls).size
