@@ -1,7 +1,5 @@
 import common.loadPackets
 
-import scala.annotation.tailrec
-
 case class IngredientRange(start: Long, end: Long) {
   val size = end - start + 1
   def contains(ingredient: Long): Boolean =
@@ -17,8 +15,8 @@ val input = loadPackets(List("day05.txt")).flatMap({
   case id => Some(id.toLong)
 })
 
-val ranges = input.filter(_.isInstanceOf[IngredientRange]).map(_.asInstanceOf[IngredientRange])
-val ingredients = input.filter(_.isInstanceOf[Long]).map(_.asInstanceOf[Long])
+val ranges = input.collect({case range: IngredientRange => range})
+val ingredients = input.collect({case ingredient: Long => ingredient})
 
 val part1 = ingredients.count(ingredient => ranges.exists(_.contains(ingredient)))
 
