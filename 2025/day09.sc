@@ -1,5 +1,6 @@
 import scala.annotation.tailrec
 import scala.io.Source
+import scala.collection.parallel.CollectionConverters._
 
 val input = Source.fromResource("day09.txt").getLines().toList
 
@@ -65,7 +66,7 @@ def floodFill(open: Set[Tile], closed: Set[Tile] = edge): Set[Tile] = {
 val startTile = zoomOut(red.head)
 val redAndGreen = floodFill(Set(Tile(477,246)))
 
-val part2 = red.zip(zoomedOutTiles).combinations(2).filter {
+val part2 = red.zip(zoomedOutTiles).combinations(2).toList.par.filter {
   case List((_, zoomedA), (_, zoomedB)) => zoomedA.areaTiles(zoomedB).forall(redAndGreen)
 }.map {
   case List((a,_), (b, _)) => a.areaSpanned(b)
