@@ -1,6 +1,8 @@
+import common.{Grid, aStarSearch}
+
 import scala.annotation.tailrec
 import scala.io.Source
-import scala.collection.parallel.CollectionConverters._
+import scala.collection.parallel.CollectionConverters.*
 
 val input = Source.fromResource("day10.txt").getLines().toList
 
@@ -31,18 +33,18 @@ def press(current: Map[Int, Int], wiring: Set[Int]): Map[Int, Int] =
 def overCharged(current: Map[Int, Int], desired: Map[Int, Int]): Boolean =
   current.exists((light, currentJoltage) => desired.getOrElse(light, 0) < currentJoltage)
 
-@tailrec
-def fewestPresses(current: Set[Map[Int, Int]], desired: Map[Int, Int], wirings: List[Set[Int]], n: Int = 0): Int = {
-  if (current.contains(desired)) n
-  else fewestPresses(
-    current.flatMap(c => wirings.map(w => press(c, w)).toSet).filterNot(c => overCharged(c, desired)),
-    desired,
-    wirings,
-    n + 1)
+def grid(wirings: List[Set[Int]], desired: Map[Int, Int]) = {
+  val stepsize = wirings.map(_.size).max
+  new Grid[Map[Int, Int]]:
+    override def heuristicDistanceToFinish(from: Map[Int, Int]): Int =
+      from.map((light, currentJoltage) => (desired.getOrElse(light, 0) - currentJoltage).abs).sum / stepsize
+    override def getNeighbours(state: Map[Int, Int]): Iterable[Map[Int, Int]] =
+      wirings.map(w => press(state, w)).filterNot(c => overCharged(c, desired))
+    override def moveCost(from: Map[Int, Int], to: Map[Int, Int]): Int = 1
 }
 
-val part2 = machines.par.map {
-  case (_, wirings, joltage) => fewestPresses(Set(Map()),
-    joltage.zipWithIndex.map(_.swap).filter((_, joltage) => joltage > 0).toMap,
-    wirings)
-}.sum
+val part2 = machines.tail.take(1).map {
+  case (_, wirings, joltage) =>
+    val desired = joltage.zipWithIndex.map(_.swap).filter((_, joltage) => joltage > 0).toMap
+    aStarSearch(Map(), grid(wirings, desired), _ == desired).get._1
+}
