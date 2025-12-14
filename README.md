@@ -2,7 +2,7 @@
 
 <!-- AOC TILES BEGIN -->
 <h1 align="center">
-  2025 - 19 ⭐ - SuperCollider
+  2025 - 20 ⭐ - SuperCollider
 </h1>
 <a href="2025/day01.sc">
   <img src=".aoc_tiles/tiles/2025/01.png" width="161px">
@@ -33,5 +33,8 @@
 </a>
 <a href="2025/day10.sc">
   <img src=".aoc_tiles/tiles/2025/10.png" width="161px">
+</a>
+<a href="2025/day11.sc">
+  <img src=".aoc_tiles/tiles/2025/11.png" width="161px">
 </a>
 <!-- AOC TILES END -->
