@@ -70,11 +70,15 @@ case class State(width: Int,
 
   val solved: Boolean = presents.isEmpty
 
-  def solvable: Boolean = {
+  def slack: Int = {
     val tilesLeft: Int = (height - cursor.y) * width + width - cursor.x
     val tilesNeeded: Int = presents.map((id, count) => shapes(id).points.size * count).sum
-    tilesNeeded <= tilesLeft
+    tilesLeft - tilesNeeded
   }
+
+  def trickiness: Float = slack.toFloat / (width * height)
+
+  def solvable: Boolean = slack >= 0
 }
 
 def getInitialState(line: String): State = line match {
@@ -86,13 +90,13 @@ def getInitialState(line: String): State = line match {
     }.toMap)
 }
 
-def canPlacePresents(state: State): Boolean = state.solved ||
-  state.solvable && (state.placePresent.exists(canPlacePresents) || state.moveCursor.exists(canPlacePresents))
+def canPlacePresents(state: State, until: Long): Boolean = {
+  if(System.currentTimeMillis() > until)
+    false
+  else state.solved ||
+  state.solvable && (state.placePresent.exists(canPlacePresents(_, until)) || state.moveCursor.exists(canPlacePresents(_, until)))
+}
 
 val lines = input.drop(shapes.size * 5)
-val problems = lines.map(getInitialState)
-
-canPlacePresents(problems.head)
-canPlacePresents(problems(1))
-canPlacePresents(problems(2))
-
+val until = System.currentTimeMillis() + 10000
+val part1 = lines.map(getInitialState).sortBy(-_.trickiness).count(canPlacePresents(_, until))
