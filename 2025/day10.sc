@@ -3,6 +3,9 @@ import common.{Grid, aStarSearch}
 import scala.annotation.tailrec
 import scala.io.Source
 import scala.collection.parallel.CollectionConverters.*
+import breeze.linalg.{DenseMatrix, DenseVector, inv}
+
+import scala.util.Try
 
 val input = Source.fromResource("day10.txt").getLines().toList
 
@@ -26,25 +29,40 @@ val part1 = machines.map {
   case (lights, wirings, _) => fewestToggles(Set(Set()), lights, wirings)
 }.sum
 
-def press(current: Map[Int, Int], wiring: Set[Int]): Map[Int, Int] =
-  wiring.foldLeft(current)
-    ((jolts, button) => jolts.updatedWith(button)(_.map(_ + 1).orElse(Some(1))))
-
-def overCharged(current: Map[Int, Int], desired: Map[Int, Int]): Boolean =
-  current.exists((light, currentJoltage) => desired.getOrElse(light, 0) < currentJoltage)
-
-def grid(wirings: List[Set[Int]], desired: Map[Int, Int]) = {
-  val stepsize = wirings.map(_.size).max
-  new Grid[Map[Int, Int]]:
-    override def heuristicDistanceToFinish(from: Map[Int, Int]): Int =
-      from.map((light, currentJoltage) => (desired.getOrElse(light, 0) - currentJoltage).abs).sum / stepsize
-    override def getNeighbours(state: Map[Int, Int]): Iterable[Map[Int, Int]] =
-      wirings.map(w => press(state, w)).filterNot(c => overCharged(c, desired))
-    override def moveCost(from: Map[Int, Int], to: Map[Int, Int]): Int = 1
+def solveMachineAllColumnCombos(A: DenseMatrix[Double], b: DenseVector[Double]): Option[Int] = {
+  val m = A.cols
+  val candidates = (A.rows to 0 by -1).flatMap(n => {
+    val colCombinations = (0 until m).toList.combinations(n)
+    colCombinations.flatMap { cols =>
+      val freeCols = (0 until m).filterNot(cols.contains)
+      val Ared = A(::, cols).toDenseMatrix
+      Try(Ared \ b).toOption match {
+        case Some(xRed) =>
+          if (xRed.forall(_ >= 0.001)) {
+            val xRounded = xRed.map(v => math.round(v).toInt)
+            val xFull = DenseVector.zeros[Double](m)
+            cols.zipWithIndex.foreach { case (c, idx) => xFull(c) = xRounded(idx) }
+            val diff: DenseVector[Double] = (A * xFull) - b
+            if diff.toScalaVector.map(_.abs).sum < 0.001 then
+              Some(xFull) else None
+          } else None
+        case None => None
+      }
+    }
+  })
+  candidates.toList.map(_.toScalaVector.sum.toInt).sorted.headOption
 }
 
-val part2 = machines.tail.take(1).map {
-  case (_, wirings, joltage) =>
-    val desired = joltage.zipWithIndex.map(_.swap).filter((_, joltage) => joltage > 0).toMap
-    aStarSearch(Map(), grid(wirings, desired), _ == desired).get._1
+def minPresses(machine: (Set[Int], List[Set[Int]], Array[Int])) = {
+  val (_, wirings, joltage) = machine
+  val mat = joltage.indices.map(light => wirings.map(wiring => if wiring(light) then 1.0 else 0.0))
+  val indices = mat.toSet.map(mat.indexOf(_)).toList
+  val A = DenseMatrix(indices.map(mat): _*)
+  val b = DenseVector(indices.map(joltage).map(_.toDouble): _*)
+  solveMachineAllColumnCombos(A,b)
 }
+
+machines.zipWithIndex.filter(m => minPresses(m._1).isEmpty).map(_._2)
+
+//val presses = machines.flatMap(minPresses).sum
+// 17769 is too low

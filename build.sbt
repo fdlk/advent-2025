@@ -27,6 +27,7 @@ version := "1.0"
 
 //libraryDependencies += "com.lihaoyi" %% "fastparse" % "2.3.3"
 libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "1.1.0"
+libraryDependencies += "org.scalanlp" %% "breeze" % "2.1.0"
 //// https://mvnrepository.com/artifact/gov.nist.math/jama
 //libraryDependencies += "gov.nist.math" % "jama" % "1.0.3"
 
